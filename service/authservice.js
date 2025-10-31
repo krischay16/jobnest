@@ -14,7 +14,8 @@ module.exports.login = async (email, password) => {
 
 	// model.getJobseeker should return a single user (findOne). If it still
 	// returns an array, the model layer should be updated — handle both here.
-	const result = await model.getJobseeker(email);
+	const result = await model.getJobseeker(email)||await model.getJobseeker(email);
+	
 	const user = Array.isArray(result) ? result[0] : result;
 	if(user){
 		const saltRounds=10;

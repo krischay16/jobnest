@@ -7,12 +7,13 @@ const secret="Arunisnoob"
 const verify=(req,res,next)=>{
 
     const token=req.headers['authorization'];
-
-    if(!token) return res.status(401).json({error:"No toen,auth failed"})
+    
+    if(!token) return res.status(401).json({error:"No token,auth failed"})
 
         try{
 
     req.user=jwt.verify(token,secret);
+    
 
 next();}
 

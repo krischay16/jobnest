@@ -1,62 +1,35 @@
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const dbModel = require('./model/dbModel');
+const routing = require('./routes/routing');
+const cors = require('cors');
+const auth=require('./auth/auth');
+const app = express();
 
-var express = require('express');
+// ✅ Connect to DB at startup
+dbModel.connect()
+  .then(() => console.log("Connected to MongoDB successfully"))
+  .catch((err) => console.error("MongoDB connection failed:", err));
 
-var path = require('path');
-
-var cookieParser = require('cookie-parser');
-
-var logger = require('morgan');
-
-const dbModel=require('./model/dbModel')
-
-const routing=require('./routes/routing')
-
-const cors=require('cors')
-
-// auth middleware is applied per-route in `routes/routing.js` where needed
-// (do not apply globally so signup/login can be public)
-
-var app = express();
-
-app.use(cors())
-
-// view engine setup
-
-
- 
-
+app.use(cors());
 app.use(express.json());
+app.use(logger('dev'));
 
-
- 
-
-app.get('/',async(req,res,next)=>{
-
-  await dbModel.connect()
-
-  console.log("connected to mango successfully");
-
-  next();
-
-})
-
+// ✅ Mount your routes
+app.use('/api', auth,routing); // Example of using auth middleware
 app.use('/', routing);
 
-// Error handler — return JSON instead of HTML
+// ✅ Global error handler
 app.use((err, req, res, next) => {
-  const status = err && err.status ? err.status : 500;
-  res.status(status).json({ error: err && err.message ? err.message : 'Internal server error' });
+  const status = err.status || 500;
+  res.status(status).json({ error: err.message || 'Internal server error' });
 });
 
-
-
-
- 
-
-app.listen(3000)
-
-
- 
+// ✅ Start the server
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
+});
 
 module.exports = app;
-
