@@ -79,6 +79,17 @@ router.get(`/jobseeker`, async (req, res, next) => {
    next(err);
  }
 });
+
+router.get(`/jobseeker/:id`, async (req, res, next) => {
+ try {
+   let data = await serviceModel.getJobseekerById(req.params.id);
+   console.log(data);
+   res.json(data);
+ } catch (err) {
+   next(err);
+ }
+});
+
 router.put('/jobseeker', async (req, res, next) => {
  try {
    let data = await serviceModel.updateJobseeker(req.user.email, req.body);
@@ -106,9 +117,9 @@ router.post('/employer/signup', async (req, res, next) => {
    next(err);
  }
 });
-router.get('/employer', async (req, res, next) => {
+router.get('/employer/:id', async (req, res, next) => {
  try {
-   let data = await serviceModel.listEmployers();
+   let data = await serviceModel.getEmployer(req.params.id);
    res.json(data);
  } catch (err) {
    next(err);
@@ -165,6 +176,15 @@ router.get('/jobbyid/:id', async (req, res, next) => {
  }
 });
 
+router.get('/jobsbyemployee/:id', async (req, res, next) => {
+ try {
+   let jobs = await serviceModel.getJobByEmployee(req.params.id);
+   res.json(jobs);
+ } catch (err) {
+   next(err);
+ }
+});
+
 
 
 
@@ -187,8 +207,8 @@ router.delete('/job/:id', async (req, res, next) => {
 /* --- APPLICATION ROUTES --- */
 router.post('/application/apply', async (req, res, next) => {
  try {
-  const {user,job,status}=req.body
-  let app = await serviceModel.createApplication({user:user,job:job,status:status});
+  const {user,job,status,employer}=req.body
+  let app = await serviceModel.createApplication({user:user,job:job,status:status,employer:employer});
    res.status(201).json({ message: "Applied successfully", app });
  } catch (err) {
    next(err);
@@ -211,6 +231,17 @@ router.get('/applications/:userId', async (req, res, next) => {
     next(err);
   }
 });
+
+router.get('/myapplicants/:id', async (req, res, next) =>  {
+  try {
+    const apps = await serviceModel.getApplicants(req.params.id);
+    res.send(apps)
+  }
+  catch(err){
+    console.log("Failed to fetch applicants details")
+    next(err)
+  }
+})
 
 router.put('/application/:id', async (req, res, next) => {
  try {

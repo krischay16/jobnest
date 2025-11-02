@@ -11,7 +11,10 @@ const userschema = new mongoose.Schema({
   experience: { type: String },
   resume: { type: String },
   phoneNumber: { type: String },
-  userType: { type: String, required: true }
+  userType: { type: String, required: true },
+  linkedin: { type: String },
+  github: { type: String },
+  leetcode: { type: String }
 }, { collection: "jobseeker" });
 
 const employeeschema = new mongoose.Schema({
@@ -26,15 +29,18 @@ const employeeschema = new mongoose.Schema({
 }, { collection: "employer" });
 
 const jobschema = new mongoose.Schema({
-  jobtitle: { type: String, required: true },
+  title: { type: String, required: true },
   salaryRange: { type: String, required: true },
   skills: { type: [String], required: true },
   description: { type: String, required: true },
-  preference: { type: String, required: true },
+  type: { type: String, required: true },
   experience: { type: String, required: true },
   location: { type: String, required: true },
   score: [{ skill: String, value: Number }],
+  company: { type: String, required: true },
   employer: { type: mongoose.Schema.Types.ObjectId, ref: "employer", required: true },
+  id: { type: String, required: true }
+
 }, { collection: "jobpost" });
 
 const quizschema = new mongoose.Schema({
@@ -47,6 +53,7 @@ const quizschema = new mongoose.Schema({
 const applicationschema = new mongoose.Schema({
   job: { type: mongoose.Schema.Types.ObjectId, ref: "jobpost", required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "jobseeker", required: true },
+  employer:{type:mongoose.Schema.Types.ObjectId,ref:"employer",required:true},
   status: { type: String }
 }, { collection: "application" });
 
