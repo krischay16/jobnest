@@ -14,7 +14,7 @@ module.exports.login = async (email, password) => {
 
 	// model.getJobseeker should return a single user (findOne). If it still
 	// returns an array, the model layer should be updated — handle both here.
-	const result = await model.getJobseeker(email)||await model.getJobseeker(email);
+	const result = await model.getJobseeker(email)||await model.getEmployer(email);
 	
 	const user = Array.isArray(result) ? result[0] : result;
 	if(user){
@@ -36,9 +36,9 @@ module.exports.login = async (email, password) => {
 		throw err;
 	}
 
-	const token = jwt.sign({ id: user._id || user.id, email: user.email }, secret, {
+	const token = jwt.sign({email: user.email }, secret, {
 		expiresIn: '24h',
 	});
 
-	return token;
+	return {token, user};
 };

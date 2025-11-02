@@ -3,11 +3,60 @@ const router = express.Router();
 const serviceModel = require('../service/service');
 const bcrypt = require('bcryptjs');
 const loginService=require('../service/authservice')
+const Message = require('../model/message');
+
+
 /* --- JOBSEEKER ROUTES --- */
+var user;
+
+router.get('/users', async (req, res, next) => {
+  try {
+    const jobseekers = await serviceModel.getJobseekers();
+    const employers = await serviceModel.getEmployers();
+    
+    const allUsers = [
+      ...jobseekers.map(u => ({
+        _id: u._id,
+        fullname: u.fullname,
+        email: u.email,
+        usertype: 'jobseeker'
+      })),
+      ...employers.map(u => ({
+        _id: u._id,
+        companyname: u.companyname,
+        email: u.email,
+        usertype: 'employer'
+      }))
+    ];
+    
+    res.json(allUsers);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Get messages for a specific room
+router.get('/messages/:roomId', async (req, res, next) => {
+  try {
+    const messages = await Message.find({ roomId: req.params.roomId })
+      .sort({ timestamp: 1 })
+      .limit(100); // Limit to last 100 messages
+    res.json(messages);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+router.use('/',(req,res,next)=>{
+  user=req.user;
+  next()
+})
 router.post('/login',async(req,res,next)=>{
   try
-  {let token=await loginService.login(req.body.email,req.body.password);
-  res.json(token);}
+  {let {token,user}=await loginService.login(req.body.email,req.body.password);
+  console.log(token,user);
+  res.json({token,user});}
   catch(err){
     next(err)
   }
@@ -21,17 +70,19 @@ router.post('/jobseeker/signup', async (req, res, next) => {
    next(err);
  }
 });
-router.get('/jobseeker/:id', async (req, res, next) => {
+router.get(`/jobseeker`, async (req, res, next) => {
  try {
-   let data = await serviceModel.getJobseeker(req.params.id);
+   let data = await serviceModel.getJobseeker(req.user.email);
+   console.log(data);
    res.json(data);
  } catch (err) {
    next(err);
  }
 });
-router.put('/jobseeker/:id', async (req, res, next) => {
+router.put('/jobseeker', async (req, res, next) => {
  try {
-   let data = await serviceModel.updateJobseeker(req.params.id, req.body);
+   let data = await serviceModel.updateJobseeker(req.user.email, req.body);
+   
    res.json({ message: "Updated successfully", data });
  } catch (err) {
    next(err);
@@ -74,7 +125,7 @@ router.put('/employer/:id', async (req, res, next) => {
 router.delete('/employer/:id', async (req, res, next) => {
  try {
    await serviceModel.deleteEmployer(req.params.id);
-   res.json({ message: "Employer deleted" });
+   res.json({ message: "Employer deleted"});
  } catch (err) {
    next(err);
  }
@@ -88,14 +139,35 @@ router.post('/job/post', async (req, res, next) => {
    next(err);
  }
 });
-router.get('/job', async (req, res, next) => {
+router.get('/jobs', async (req, res, next) => {
  try {
-   let jobs = await serviceModel.getJob();
+   let jobs = await serviceModel.getJobs();
    res.json(jobs);
  } catch (err) {
    next(err);
  }
 });
+router.get('/job/:id', async (req, res, next) => {
+ try {
+   let jobs = await serviceModel.getJob(req.params.id);
+   res.json(jobs);
+ } catch (err) {
+   next(err);
+ }
+});
+
+router.get('/jobbyid/:id', async (req, res, next) => {
+ try {
+   let jobs = await serviceModel.getJobById(req.params.id);
+   res.json(jobs);
+ } catch (err) {
+   next(err);
+ }
+});
+
+
+
+
 router.put('/job/:id', async (req, res, next) => {
  try {
    let job = await serviceModel.updateJob(req.params.id, req.body);
@@ -115,7 +187,8 @@ router.delete('/job/:id', async (req, res, next) => {
 /* --- APPLICATION ROUTES --- */
 router.post('/application/apply', async (req, res, next) => {
  try {
-   let app = await serviceModel.createApplication(req.body);
+  const {user,job,status}=req.body
+  let app = await serviceModel.createApplication({user:user,job:job,status:status});
    res.status(201).json({ message: "Applied successfully", app });
  } catch (err) {
    next(err);
@@ -129,6 +202,16 @@ router.get('/application/:email', async (req, res, next) => {
    next(err);
  }
 });
+
+router.get('/applications/:userId', async (req, res, next) => {
+ try {
+   let apps = await serviceModel.getApplicationsByUser(req.params.userId);  
+    res.json(apps);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.put('/application/:id', async (req, res, next) => {
  try {
    let app = await serviceModel.updateApplication(req.params.id, req.body);
@@ -146,36 +229,33 @@ router.delete('/application/:id', async (req, res, next) => {
  }
 });
 /* --- QUIZ ROUTES --- */
-// router.post('/quiz/add', async (req, res, next) => {
-//  try {
-//    let quiz = await serviceModel.createQuiz(req.body);
-//    res.status(201).json({ message: "Quiz added", quiz });
-//  } catch (err) {
-//    next(err);
-//  }
-// });
-// router.get('/quiz', async (req, res, next) => {
-//  try {
-//    let quizzes = await serviceModel.listQuizzes();
-//    res.json(quizzes);
-//  } catch (err) {
-//    next(err);
-//  }
-// });
-// router.put('/quiz/:id', async (req, res, next) => {
-//  try {
-//    let quiz = await serviceModel.updateQuiz(req.params.id, req.body);
-//    res.json({ message: "Quiz updated", quiz });
-//  } catch (err) {
-//    next(err);
-//  }
-// });
-// router.delete('/quiz/:id', async (req, res, next) => {
-//  try {
-//    await serviceModel.deleteQuiz(req.params.id);
-//    res.json({ message: "Quiz deleted" });
-//  } catch (err) {
-//    next(err);
-//  }
-// });
+
+router.get('/quiz', async (req, res, next) => {
+ try {
+   const questions = await serviceModel.questions();
+   // model.questions() returns an array already; ensure we return an array
+   res.json(Array.isArray(questions) ? questions : (questions ? [questions] : []));
+ } catch (err) {
+   next(err);
+ }
+});
+
+router.post('/submit', async (req, res, next) => {
+  try {
+    const { answers } = req.body;
+    const userId = req.user.email; // decoded from token
+
+    const result = await serviceModel.submitQuiz(userId, answers);
+
+    res.json({
+      message: 'Assessment submitted successfully ✅',
+      scores: result.scoreArray,
+      user: result.updatedUser
+    });
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
+
 module.exports = router;

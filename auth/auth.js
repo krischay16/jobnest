@@ -13,6 +13,7 @@ const verify=(req,res,next)=>{
         try{
 
     req.user=jwt.verify(token,secret);
+    console.log(req.user)
     
 
 next();}

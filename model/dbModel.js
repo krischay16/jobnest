@@ -21,13 +21,14 @@ const employeeschema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   description: { type: String, required: true },
   companyicon: { type: String },
-  industry: { type: String, required: true }
+  industry: { type: String, required: true },
+  userType: { type: String, required: true }
 }, { collection: "employer" });
 
 const jobschema = new mongoose.Schema({
   jobtitle: { type: String, required: true },
-  salary: { type: String, required: true },
-  skill: { type: [String], required: true },
+  salaryRange: { type: String, required: true },
+  skills: { type: [String], required: true },
   description: { type: String, required: true },
   preference: { type: String, required: true },
   experience: { type: String, required: true },
@@ -49,6 +50,14 @@ const applicationschema = new mongoose.Schema({
   status: { type: String }
 }, { collection: "application" });
 
+const MessageSchema = new mongoose.Schema({
+  roomId: { type: String, required: true },
+  senderId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  senderName: { type: String, required: true },
+  message: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+
 const dbModel = {};
 
 dbModel.connect = async () => {
@@ -64,5 +73,6 @@ dbModel.employer = mongoose.model("employer", employeeschema);
 dbModel.job = mongoose.model("jobpost", jobschema);
 dbModel.quiz = mongoose.model("quiz", quizschema);
 dbModel.application = mongoose.model("application", applicationschema);
+
 
 module.exports = dbModel;
